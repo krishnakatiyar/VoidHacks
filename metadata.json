@@ -1,0 +1,5 @@
+{
+  "name": "NeuroScribe",
+  "description": "An AI-powered application for early Alzheimer's detection, allowing doctors to submit patient clinical data and MRI scans for analysis. The app provides a streamlined interface for patient management and leverages a powerful AI model for accurate predictions, supported by Gemini for insightful clinical summaries.",
+  "requestFramePermissions": []
+}
