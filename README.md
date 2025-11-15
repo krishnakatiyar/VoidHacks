@@ -4,8 +4,6 @@
 
 NeuroScribe AI is an advanced, AI-powered web application designed for medical professionals. It provides a streamlined interface for doctors to submit patient clinical data and MRI scans for early Alzheimer's disease detection analysis. The application leverages a powerful AI model for accurate predictions and integrates the Gemini API to generate insightful, easy-to-understand clinical summaries.
 
-![NeuroScribe AI Dashboard Screenshot](https://storage.googleapis.com/aistudio-hosting/workspace-home/4a29a39a-58b2-4b67-a510-53e30f145f47/preview_image.png)
-
 ---
 
 ## ✨ Features
