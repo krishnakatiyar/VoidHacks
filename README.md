@@ -4,6 +4,8 @@
 
 NeuroScribe AI is an advanced, AI-powered web application designed for medical professionals. It provides a streamlined interface for doctors to submit patient clinical data and MRI scans for early Alzheimer's disease detection analysis. The application leverages a powerful AI model for accurate predictions and integrates the Gemini API to generate insightful, easy-to-understand clinical summaries.
 
+![NeuroScribe AI Dashboard Screenshot](https://storage.googleapis.com/aistudio-hosting/workspace-home/4a29a39a-58b2-4b67-a510-53e30f145f47/preview_image.png)
+
 ---
 
 ## ✨ Features
@@ -25,6 +27,7 @@ NeuroScribe AI is an advanced, AI-powered web application designed for medical p
 This project is a modern frontend application built with a focus on performance, developer experience, and a great user interface.
 
 - **Frontend Framework:** [**React**](https://react.dev/) (v19) with TypeScript
+- **Live Transpilation:** [**Babel Standalone**](https://babeljs.io/docs/babel-standalone) to compile JSX/TSX directly in the browser, removing the need for a build step in local development.
 - **Styling:** [**Tailwind CSS**](https://tailwindcss.com/) for a utility-first CSS workflow.
 - **AI Integration:** [**Google Gemini API**](https://ai.google.dev/) (`@google/genai`) for generating clinical summaries.
 - **Icons:** A custom set of SVG icons for a crisp and consistent look.
@@ -37,12 +40,13 @@ This project is a modern frontend application built with a focus on performance,
 
 ## 🚀 Getting Started
 
-This application is designed to run in a modern web browser and relies on an environment that provides the necessary Google GenAI API key.
+This application is configured to run directly in the browser without any build steps.
 
 ### Prerequisites
 
 - A modern web browser (e.g., Chrome, Firefox, Safari, Edge).
 - An internet connection.
+- A simple local web server to serve the files.
 
 ### Environment Variables
 
@@ -52,11 +56,28 @@ The application requires a Google Gemini API key to function correctly. This key
 
 The application code uses `process.env.API_KEY` to access this variable, assuming it's injected by the hosting environment.
 
-### Running the Application
+### Running Locally
 
-1.  Ensure all the project files are hosted on a static file server or within an environment like AI Studio.
-2.  Open the `index.html` file in your web browser.
-3.  The application will load, and you can interact with it immediately. The login uses mock credentials for demonstration purposes.
+This project is configured to run directly in the browser without any complex build steps. However, you **must serve the files from a local web server** due to browser security policies (CORS). Opening the `index.html` file directly from your filesystem (`file://...`) will not work.
+
+1.  **Serve the files:** Open your terminal in the project's root directory and use one of the following commands to start a simple web server.
+
+    *   **If you have Python 3:**
+        ```bash
+        python -m http.server
+        ```
+
+    *   **If you have Node.js and `serve`:**
+        ```bash
+        # Install serve globally if you haven't already: npm install -g serve
+        serve .
+        ```
+    *   **Using VS Code:** The [Live Server extension](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) is a great one-click option.
+
+2.  **Open in browser:** Once the server is running, it will give you a local address. Open your web browser and navigate to it. It will typically be:
+    *   `http://localhost:8000`
+    *   `http://localhost:3000`
+    *   `http://127.0.0.1:5500`
 
 ---
 
@@ -75,14 +96,7 @@ The project is organized into a logical and maintainable structure:
 │
 ├── components/
 │   ├── Dashboard.tsx         # The main dashboard view after login
-│   ├── EmptyState.tsx        # Component for when no patients are found
-│   ├── Header.tsx            # Application header
-│   ├── Layout.tsx            # Main layout wrapper
-│   ├── LoginPage.tsx         # User login component
-│   ├── PatientForm.tsx       # Form for submitting new patient data
-│   ├── PatientListItem.tsx   # Component for a single patient in the list
-│   ├── Spinner.tsx           # Reusable loading spinner
-│   └── icons/                # Directory for all SVG icon components
+│   └── ... (other components)
 │
 └── services/
     ├── geminiService.ts      # Service for interacting with the Gemini API
@@ -93,4 +107,4 @@ The project is organized into a logical and maintainable structure:
 
 ## 📄 License
 
-This project is licensed under the MIT License. See the `LICENSE` file for more details.
+This project is licensed under the MIT License.
