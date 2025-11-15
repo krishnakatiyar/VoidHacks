@@ -1,0 +1,99 @@
+/**
+ * @fileoverview Firestore Security Rules for NeuroScribe AI.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model, where doctors can only access their own profiles and the patient records they create.
+ *
+ * Data Structure:
+ * - /doctors/{doctorId}: Stores doctor profiles. The `doctorId` MUST match the Firebase Auth UID.
+ * - /doctors/{doctorId}/patient_records/{recordId}: Stores patient records associated with a specific doctor. The `doctorId` in the path MUST match the `doctorId` field within the document.
+ *
+ * Key Security Decisions:
+ * - Doctors can only read and write their own profiles.
+ * - Doctors can only read and write patient records that they own.
+ * - Listing of all doctors is disallowed.
+ *
+ * Denormalization for Authorization:
+ * The `PatientRecord` entity contains a `doctorId` field that MUST match the `doctorId` in the path. This denormalization avoids costly `get()` calls in the security rules, improving performance and security.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Secure access to the /doctors collection.
+     * @path /doctors/{doctorId}
+     * @allow (get) Authenticated doctor can read their own profile.
+     *   - Request: auth.uid = 'doctor123', path = '/databases/(default)/documents/doctors/doctor123'
+     * @allow (create) Authenticated doctor can create their own profile.
+     *   - Request: auth.uid = 'doctor123', path = '/databases/(default)/documents/doctors/doctor123', data.id = 'doctor123'
+     * @allow (update) Authenticated doctor can update their own profile.
+     *   - Request: auth.uid = 'doctor123', path = '/databases/(default)/documents/doctors/doctor123'
+     * @allow (delete) Authenticated doctor can delete their own profile.
+     *   - Request: auth.uid = 'doctor123', path = '/databases/(default)/documents/doctors/doctor123'
+     * @deny (get) Unauthenticated user cannot read doctor profile.
+     *   - Request: auth.uid = null, path = '/databases/(default)/documents/doctors/doctor123'
+     * @deny (get) Authenticated doctor cannot read another doctor's profile.
+     *   - Request: auth.uid = 'doctor456', path = '/databases/(default)/documents/doctors/doctor123'
+     * @deny (create) Mismatched doctorId in path and data
+     *   - Request: auth.uid = 'doctor123', path = '/databases/(default)/documents/doctors/doctor123', data.id = 'doctor456'
+     * @principle Enforces document ownership for all operations on doctor profiles.
+     */
+    match /doctors/{doctorId} {
+      allow get: if isSignedIn() && isOwner(doctorId);
+      allow list: if false; // Listing all doctors is not permitted.
+      allow create: if isSignedIn() && isOwner(doctorId) && request.resource.data.id == doctorId;
+      allow update: if isSignedIn() && isExistingOwner(doctorId) && request.resource.data.id == resource.data.id;
+      allow delete: if isSignedIn() && isExistingOwner(doctorId);
+    }
+
+    /**
+     * @description Secure access to patient records nested under a doctor's profile.
+     * @path /doctors/{doctorId}/patient_records/{recordId}
+     * @allow (get) Authenticated doctor can read their own patient record.
+     *   - Request: auth.uid = 'doctor123', path = '/databases/(default)/documents/doctors/doctor123/patient_records/record456',
+     *   - resource.data.doctorId = 'doctor123'
+     * @allow (create) Authenticated doctor can create a patient record under their profile.
+     *   - Request: auth.uid = 'doctor123', path = '/databases/(default)/documents/doctors/doctor123/patient_records/record456',
+     *   - data.doctorId = 'doctor123'
+     * @allow (update) Authenticated doctor can update their own patient record.
+     *   - Request: auth.uid = 'doctor123', path = '/databases/(default)/documents/doctors/doctor123/patient_records/record456',
+     *   - resource.data.doctorId = 'doctor123'
+     * @allow (delete) Authenticated doctor can delete their own patient record.
+     *   - Request: auth.uid = 'doctor123', path = '/databases/(default)/documents/doctors/doctor123/patient_records/record456',
+     *   - resource.data.doctorId = 'doctor123'
+     * @deny (get) Unauthenticated user cannot read patient record.
+     *   - Request: auth.uid = null, path = '/databases/(default)/documents/doctors/doctor123/patient_records/record456'
+     * @deny (get) Authenticated doctor cannot read another doctor's patient record.
+     *   - Request: auth.uid = 'doctor456', path = '/databases/(default)/documents/doctors/doctor123/patient_records/record456',
+     *   - resource.data.doctorId = 'doctor123'
+     * @deny (create) Mismatched doctorId in path and data.
+     *   - Request: auth.uid = 'doctor123', path = '/databases/(default)/documents/doctors/doctor123/patient_records/record456',
+     *   - data.doctorId = 'doctor456'
+     * @deny (update) Attempt to change the doctorId on a patient record.
+     *   - Request: auth.uid = 'doctor123', path = '/databases/(default)/documents/doctors/doctor123/patient_records/record456',
+     *   - resource.data.doctorId = 'doctor456'
+     * @principle Enforces document ownership and prevents unauthorized data access.
+     */
+    match /doctors/{doctorId}/patient_records/{recordId} {
+      allow get: if isSignedIn() && isOwner(doctorId) && resource.data.doctorId == doctorId;
+      allow list: if isSignedIn() && isOwner(doctorId);
+      allow create: if isSignedIn() && isOwner(doctorId) && request.resource.data.doctorId == doctorId;
+      allow update: if isSignedIn() && isExistingOwner(doctorId) && resource.data.doctorId == doctorId;
+      allow delete: if isSignedIn() && isExistingOwner(doctorId) && resource.data.doctorId == doctorId;
+    }
+  }
+
+  // Helper functions
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  function isOwner(userId) {
+    return request.auth.uid == userId;
+  }
+
+  function isExistingOwner(userId) {
+    return isOwner(userId) && resource != null;
+  }
+}
